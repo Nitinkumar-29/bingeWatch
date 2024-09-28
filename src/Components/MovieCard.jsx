@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import loadingGif from "../images/loading.gif"
+import loadingGif from "../images/loading.gif";
 
 const MovieCard = () => {
   const [movieDetails, setMovieDetails] = useState([]);
@@ -186,7 +186,9 @@ const MovieCard = () => {
                     )}
                     {movieDetails.production_countries && (
                       <div>
-                       <span className="text-lg font-semibold">Countries: </span>
+                        <span className="text-lg font-semibold">
+                          Countries:{" "}
+                        </span>
                         {movieDetails && movieDetails.production_countries
                           ? movieDetails.production_countries.map(
                               (countries) => (
@@ -200,7 +202,9 @@ const MovieCard = () => {
                     )}
                     {movieDetails.production_companies && (
                       <div>
-                        <span className="text-lg font-semibold">Production: </span>
+                        <span className="text-lg font-semibold">
+                          Production:{" "}
+                        </span>
                         {movieDetails && movieDetails.production_companies
                           ? movieDetails.production_companies.map(
                               (production) => (
@@ -248,103 +252,111 @@ const MovieCard = () => {
             </span>
           )}
 
-          {recommended&&recommended.length>0&&<div className="space-y-6 mt-5 bg-gray-100 p-6 rounded-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                {recommended ? (
-                  recommended.length > 0 ? (
-                    <span className="text-xl xl:text-3xl font-semibold">
-                      You may also like
-                    </span>
+          {recommended && recommended.length > 0 && (
+            <div className="space-y-6 mt-5 bg-gray-100 p-6 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  {recommended ? (
+                    recommended.length > 0 ? (
+                      <span className="text-xl xl:text-3xl font-semibold">
+                        You may also like
+                      </span>
+                    ) : (
+                      ""
+                    )
                   ) : (
-                    ""
-                  )
+                    <span>
+                      <img src={loadingGif} alt="" />
+                    </span>
+                  )}
+                </div>
+                {recommended && recommended.length > 0 ? (
+                  <div className="space-x-4 text-white">
+                    <button
+                      className={`shadow-black shadow-sm text-sm md:text-base px-3 py-1 rounded-lg ${
+                        page > 1 ? "bg-sky-600" : "bg-sky-900"
+                      } `}
+                      disabled={page <= 1}
+                      onClick={handlePreviousClick}
+                      style={{
+                        cursor: page > 1 ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      className={`shadow-black shadow-sm text-sm md:text-base px-3 py-1 rounded-lg ${
+                        page < totalPages ? "bg-sky-600" : "bg-sky-900"
+                      }`}
+                      disabled={page >= totalPages}
+                      onClick={handleNextClick}
+                      style={{
+                        cursor: page < totalPages ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
                 ) : (
-                  <span><img src={loadingGif} alt="" /></span>
+                  ""
                 )}
               </div>
-              {recommended&&recommended.length>0?<div className="space-x-4 text-white">
-                <button
-                  className={`shadow-black shadow-sm text-sm md:text-base px-3 py-1 rounded-lg ${
-                    page > 1 ? "bg-sky-600" : "bg-sky-900"
-                  } `}
-                  disabled={page <= 1}
-                  onClick={handlePreviousClick}
-                  style={{
-                    cursor: page > 1 ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Previous
-                </button>
-                <button
-                  className={`shadow-black shadow-sm text-sm md:text-base px-3 py-1 rounded-lg ${
-                    page < totalPages ? "bg-sky-600" : "bg-sky-900"
-                  }`}
-                  disabled={page >= totalPages}
-                  onClick={handleNextClick}
-                  style={{
-                    cursor: page < totalPages ? "pointer" : "not-allowed",
-                  }}
-                >
-                  Next
-                </button>
-              </div>:""}
-            </div>
 
-            <div className="my-4 grid gap-4 grid-flow-row grid-col-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {recommended &&
-                recommended.map((movie) => {
-                  return (
-                    <>
-                      {movie.poster_path && (
-                        <div>
-                          <Link
-                            key={movie.id}
-                            className=""
-                            to={`/movie/${movie.id}`}
-                          >
-                            <div
-                              className="md:hover:scale-105 duration-500 ease-in-out"
-                              onClick={() => handleCardClick(movie.id)}
-                            >
-                              <img
-                                key={movie.id}
-                                className={`border-0 border-black shadow-sm shadow-black h-[30rem] mx-auto w-screen object-cover md:h-96 rounded-lg`}
-                                src={`https://image.tmdb.org/t/p/original/${movie.poster_path}`}
-                                alt=""
-                              />
-                            </div>
-                          </Link>
-                          <div className="my-3 flex flex-col">
+              <div className="my-4 grid gap-4 grid-flow-row grid-col-1 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {recommended &&
+                  recommended.map((movie) => {
+                    return (
+                      <>
+                        {movie.poster_path && (
+                          <div>
                             <Link
+                              key={movie.id}
+                              className=""
                               to={`/movie/${movie.id}`}
-                              onClick={() => handleCardClick(movie.id)}
-                              className="hover:underline duration-200"
                             >
-                              {movie.title
-                                ? movie.title.length > 30
-                                  ? `${movie.title.slice(0, 30)}...`
-                                  : movie.title
-                                : ""}
+                              <div
+                                className="md:hover:scale-105 duration-500 ease-in-out"
+                                onClick={() => handleCardClick(movie.id)}
+                              >
+                                <img
+                                  key={movie.id}
+                                  className={`border-0 border-black shadow-sm shadow-black h-[30rem] mx-auto w-screen object-cover md:h-96 rounded-lg`}
+                                  src={`https://image.tmdb.org/t/p/original/${movie.poster_path}`}
+                                  alt=""
+                                />
+                              </div>
                             </Link>
-                            <div className="flex justify-between">
-                              <span className="">{movie.release_date}</span>
-                              <span>
-                                {movie.vote_average
-                                  ? `${
-                                      Math.round(movie.vote_average * 10) / 10
-                                    }`
-                                  : 0}
-                              </span>
+                            <div className="my-3 flex flex-col">
+                              <Link
+                                to={`/movie/${movie.id}`}
+                                onClick={() => handleCardClick(movie.id)}
+                                className="hover:underline duration-200"
+                              >
+                                {movie.title
+                                  ? movie.title.length > 30
+                                    ? `${movie.title.slice(0, 30)}...`
+                                    : movie.title
+                                  : ""}
+                              </Link>
+                              <div className="flex justify-between">
+                                <span className="">{movie.release_date}</span>
+                                <span>
+                                  {movie.vote_average
+                                    ? `${
+                                        Math.round(movie.vote_average * 10) / 10
+                                      }`
+                                    : 0}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })}
+                        )}
+                      </>
+                    );
+                  })}
+              </div>
             </div>
-          </div>}
+          )}
         </div>
       )}
     </>
