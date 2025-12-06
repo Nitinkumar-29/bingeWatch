@@ -1,0 +1,34 @@
+# cloudbuild.yaml
+steps:
+  # 1) Build Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+      - "."
+
+  # 2) Push image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+
+  # 3) Deploy to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        set -e
+        IMAGE="${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
+        gcloud run deploy ${_SERVICE_NAME} \
+          --image "$IMAGE" \
+          --region ${_REGION} \
+          --platform managed \
+          --quiet \
+          --project=$PROJECT_ID \
+          ${_ALLOW_UNAUTH:+--allow-unauthenticated}
+
+images:
+  - "${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_SERVICE_NAME}:$SHORT_SHA"
