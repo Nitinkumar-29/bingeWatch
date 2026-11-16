@@ -6,9 +6,11 @@ import MovieList from "./Pages/MovieList";
 import MovieCard from "./Components/MovieCard";
 import Search from "./SearchMovies/Search";
 import MovieState from "./Context/MovieState";
+import { ThemeProvider } from "./Context/ThemeContext";
 
 function App() {
   return (
+    <ThemeProvider>
     <MovieState>
       <Router>
         <Navbar />
@@ -20,6 +22,7 @@ function App() {
         </Routes>
       </Router>
     </MovieState>
+    </ThemeProvider>
   );
 }
 

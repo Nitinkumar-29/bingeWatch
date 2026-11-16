@@ -1,206 +1,217 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import MovieContext from "../Context/MovieContext";
-import menu from "../images/menu.png";
+import { useTheme } from "../Context/ThemeContext";
+import { FiSearch, FiMenu, FiX, FiSun, FiMoon } from "react-icons/fi";
+import { MdLocalMovies } from "react-icons/md";
 
 const Navbar = () => {
   const location = useLocation();
   const { handleInputChange, handleSearch, query } = useContext(MovieContext);
+  const { theme, toggle } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const searchInputRef = useRef(null);
   const navigate = useNavigate();
 
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const closeMenuOnResize = () => {
-      if (window.innerWidth > 768) {
-        setShowMenu(false);
-      }
+      if (window.innerWidth > 768) setShowMenu(false);
     };
-
     window.addEventListener("resize", closeMenuOnResize);
-    // remove the event listener when component unmounts
-    return () => {
-      window.removeEventListener("resize", closeMenuOnResize);
-    };
+    return () => window.removeEventListener("resize", closeMenuOnResize);
   });
 
-  // Function to focus on the search input
-  const focusSearchInput = () => {
-    searchInputRef.current.focus();
-  };
-
-  // Event listener to trigger focus on "/" key press
-  const handleKeyPress = (e) => {
-    if (e.key === "/" || (e.ctrlKey && e.key === "k")) {
-      e.preventDefault(); // Prevent the default behavior of the "/" key (e.g., adding it to the input field)
-      focusSearchInput(); // Focus on the search input
-    }
-  };
-
   useEffect(() => {
-    // Add an event listener to the document to listen for key presses
-    document.addEventListener("keydown", handleKeyPress);
-
-    // Clean up the event listener when the component unmounts
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
+    const handleKeyPress = (e) => {
+      if (e.key === "/" || (e.ctrlKey && e.key === "k")) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
     };
-    // eslint-disable-next-line
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, []);
 
+  const navLinks = [
+    { label: "Popular", path: "/movies/popular" },
+    { label: "Top Rated", path: "/movies/top_rated" },
+    { label: "Upcoming", path: "/movies/upcoming" },
+  ];
+
+  const navStyle = {
+    background: scrolled ? "var(--nav-scrolled)" : "var(--nav-glass)",
+    backdropFilter: "blur(20px) saturate(180%)",
+    WebkitBackdropFilter: "blur(20px) saturate(180%)",
+    borderBottom: "1px solid var(--nav-border)",
+    boxShadow: scrolled ? "0 4px 24px rgba(59,130,246,0.08)" : "none",
+    transition: "background 0.3s ease, box-shadow 0.3s ease",
+  };
+
   return (
-    <>
-      <div className="sticky top-0 z-50 flex flex-col md:flex-row items-center w-full">
-        <div className="shadow-sm shadow-black bg-sky-700 text-white w-full flex px-4 items-center h-16 justify-between">
-          <div className="flex justify-between w-full md:w-fit">
-            <Link to="/">
-              <span onClick={()=>setShowMenu(false)} className="text-2xl">BingeWatch</span>
-            </Link>
-            {/* hamburger icon */}
-            <span
-              className="md:hidden w-fit cursor-pointer"
-              onClick={toggleMenu}
-            >
-              <img
-                className="invert hover:invert-0 duration-300 ease-in-out h-10 w-10"
-                src={menu}
-                alt=""
-              />
+    <div className="sticky top-0 z-50">
+      <div className="w-full flex items-center justify-between px-6 h-16" style={navStyle}>
+
+        {/* Logo */}
+        <Link to="/" onClick={() => setShowMenu(false)}>
+          <div className="flex items-center gap-2">
+            <MdLocalMovies className="text-blue-500 text-2xl" />
+            <span className="text-xl font-bold tracking-wide text-glow" style={{ color: "var(--text)" }}>
+              BingeWatch
             </span>
           </div>
-          <div className="hidden md:flex space-x-5 text-lg">
-            <Link
-              className={`hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/popular" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/popular"
-            >
-              Popular
-            </Link>
-            <Link
-              className={`hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/top_rated" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/top_rated"
-            >
-              Top rated
-            </Link>
-            <Link
-              className={`hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/upcoming" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/upcoming"
-            >
-              Upcoming
-            </Link>
-          </div>
-          <div className="hidden md:flex items-center">
-            <div className="space-x-4">
-              <input
-                className="text-black w-44 py-2 px-4 rounded-lg outline-none focus-within:placeholder:text-sky-700"
-                type="text"
-                id="search"
-                placeholder="Type here to search"
-                onChange={handleInputChange}
-                ref={searchInputRef}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                    if(!query.length<=0){
-                      navigate("/searchResults");
-                    }
-                  }
-                }}
-              />
-              <Link to="/searchResults">
-                <button
-                  onClick={handleSearch}
-                  disabled={query.length <= 0}
-                  className={`border-[1px] border-black py-2 px-4 rounded-lg shadow-sm shadow-black ${
-                    query.length > 0 ? "cursor-pointer" : "cursor-not-allowed"
-                  }`}
-                >
-                  Search
-                </button>
-              </Link>
-            </div>
-          </div>
-          {/* mobile-nav-part */}
-          <div className="md:hidden"></div>
-        </div>
-        {/* mobile-menu */}
-        {showMenu && (
-          <div
-            className={`absolute top-16 bg-opacity-90  bg-sky-700 text-white p-4 space-y-2 w-full flex flex-col`}
-          >
-            <Link
-              onClick={toggleMenu}
-              className={`w-fit hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/popular" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/popular"
-            >
-              Popular
-            </Link>
-            <Link
-              onClick={toggleMenu}
-              className={`w-fit hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/top_rated" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/top_rated"
-            >
-              Top rated
-            </Link>
-            <Link
-              onClick={toggleMenu}
-              className={`w-fit hover:text-black duration-300 ease-in-out ${
-                location.pathname === "/movies/upcoming" ? "underline" : ""
-              } underline-offset-[5px]`}
-              to="/movies/upcoming"
-            >
-              Upcoming
-            </Link>
-            <div className="flex md:hidden items-center">
-              <div className="space-x-4">
-                <input
-                  className="text-black w-44 py-2 px-4 rounded-lg outline-none focus-within:placeholder:text-sky-700"
-                  type="text"
-                  id="search"
-                  placeholder="Type here to search"
-                  onChange={handleInputChange}
-                  ref={searchInputRef}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSearch();
-                      toggleMenu()
-                      if (!query.length <= 0) {
-                        navigate("/searchResults");
-                      }
-                    }
-                  }}
-                />
-                <Link to="/searchResults" onClick={toggleMenu}>
-                  <button
-                    onClick={handleSearch}
-                    disabled={query.length <= 0}
-                    className={`border-[1px] border-black py-2 px-4 rounded-lg shadow-sm shadow-black ${
-                      query.length > 0 ? "cursor-pointer" : "cursor-not-allowed"
-                    }`}
+        </Link>
 
-                  >
-                    Search
-                  </button>
-                </Link>
-              </div>
-            </div>
+        {/* Desktop Nav Links */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="text-sm font-medium transition-all duration-200 hover:text-blue-500"
+              style={{
+                color: location.pathname === link.path ? "#3b82f6" : "var(--text-muted)",
+                borderBottom: location.pathname === link.path ? "2px solid #3b82f6" : "none",
+                paddingBottom: location.pathname === link.path ? "2px" : "0",
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop Search + Toggle */}
+        <div className="hidden md:flex items-center gap-2">
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--card-border)" }}
+          >
+            <FiSearch className="text-blue-500 text-sm" />
+            <input
+              ref={searchInputRef}
+              className="bg-transparent text-sm outline-none w-44"
+              style={{ color: "var(--text)" }}
+              type="text"
+              placeholder="Search movies..."
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && query.length > 0) {
+                  handleSearch();
+                  navigate("/searchResults");
+                }
+              }}
+            />
+            <span className="text-xs border rounded px-1" style={{ color: "var(--text-faint)", borderColor: "var(--text-faint)" }}>/</span>
           </div>
-        )}
+          <Link to="/searchResults">
+            <button
+              onClick={handleSearch}
+              disabled={query.length <= 0}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                query.length > 0
+                  ? "bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
+                  : "cursor-not-allowed"
+              }`}
+              style={query.length <= 0 ? { background: "var(--input-bg)", color: "var(--text-faint)" } : {}}
+            >
+              Search
+            </button>
+          </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggle}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-blue-500 hover:text-white"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--card-border)", color: "var(--text-muted)" }}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <FiSun className="text-base" /> : <FiMoon className="text-base" />}
+          </button>
+        </div>
+
+        {/* Mobile right side */}
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={toggle}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--card-border)", color: "var(--text-muted)" }}
+          >
+            {theme === "dark" ? <FiSun className="text-base" /> : <FiMoon className="text-base" />}
+          </button>
+          <button
+            className="text-2xl transition-colors duration-200"
+            style={{ color: "var(--text)" }}
+            onClick={() => setShowMenu(!showMenu)}
+          >
+            {showMenu ? <FiX /> : <FiMenu />}
+          </button>
+        </div>
       </div>
-    </>
+
+      {/* Mobile Menu */}
+      {showMenu && (
+        <div
+          className="md:hidden flex flex-col gap-4 px-6 py-5"
+          style={{
+            background: "var(--nav-scrolled)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            borderBottom: "1px solid var(--nav-border)",
+            boxShadow: "0 8px 24px rgba(59,130,246,0.08)",
+          }}
+        >
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              onClick={() => setShowMenu(false)}
+              className="text-sm font-medium transition-colors duration-200 hover:text-blue-500"
+              style={{ color: location.pathname === link.path ? "#3b82f6" : "var(--text-muted)" }}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--card-border)" }}
+          >
+            <FiSearch className="text-blue-500 text-sm" />
+            <input
+              className="bg-transparent text-sm outline-none flex-1"
+              style={{ color: "var(--text)" }}
+              type="text"
+              placeholder="Search movies..."
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && query.length > 0) {
+                  handleSearch();
+                  setShowMenu(false);
+                  navigate("/searchResults");
+                }
+              }}
+            />
+          </div>
+          <Link to="/searchResults" onClick={() => setShowMenu(false)}>
+            <button
+              onClick={handleSearch}
+              disabled={query.length <= 0}
+              className={`w-full py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                query.length > 0 ? "bg-blue-600 hover:bg-blue-500 text-white cursor-pointer" : "cursor-not-allowed"
+              }`}
+              style={query.length <= 0 ? { background: "var(--input-bg)", color: "var(--text-faint)" } : {}}
+            >
+              Search
+            </button>
+          </Link>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,21 +1,49 @@
-import React, {useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import loadingGif from "../images/loading.gif";
+import Pagination from "../Components/Pagination";
+import { AiFillStar } from "react-icons/ai";
+
+const MovieCard = ({ data }) => (
+  <div className="group relative rounded-xl overflow-hidden cursor-pointer"
+    style={{ border: "1px solid var(--card-border)", transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease" }}
+    onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.03)"; e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(59,130,246,0.2)"; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.borderColor = "var(--card-border)"; e.currentTarget.style.boxShadow = "none"; }}
+  >
+    <Link to={`/movie/${data.id}`}>
+      <img
+        className="w-full h-72 object-cover"
+        src={`https://image.tmdb.org/t/p/w500/${data.poster_path}`}
+        alt={data.title}
+      />
+      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white"
+        style={{ background: "var(--overlay-b)", border: "1px solid rgba(59,130,246,0.4)" }}>
+        <AiFillStar className="text-yellow-400 text-xs" />
+        {data.vote_average ? Math.round(data.vote_average * 10) / 10 : "N/A"}
+      </div>
+    </Link>
+    <div className="p-3" style={{ background: "var(--card)" }}>
+      <Link to={`/movie/${data.id}`}
+        className="text-sm font-medium hover:text-blue-500 transition-colors duration-200"
+        style={{ color: "var(--text)" }}>
+        {data.title?.length > 28 ? `${data.title.slice(0, 28)}...` : data.title}
+      </Link>
+      <p className="text-xs mt-1" style={{ color: "var(--text-faint)" }}>{data.release_date}</p>
+    </div>
+  </div>
+);
 
 const MovieList = () => {
-  const [movieList, setmovieList] = useState([]);
+  const [movieList, setMovieList] = useState([]);
   const [loading, setLoading] = useState(true);
   const { type } = useParams();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
   const movieListData = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/${
-          type ? type : "popular"
-        }?language=en-US&page=${page}`,
+        `https://api.themoviedb.org/3/movie/${type || "popular"}?language=en-US&page=${page}`,
         {
           method: "GET",
           headers: {
@@ -25,122 +53,50 @@ const MovieList = () => {
           },
         }
       );
-
       if (response.ok) {
         const data = await response.json();
-        setmovieList(data.results);
-        setLoading(false);
+        setMovieList(data.results);
         setTotalPages(data.total_pages);
-      } else {
-        console.log("network error");
-        setLoading(false);
       }
     } catch (error) {
-      setLoading(false);
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleNextPage = () => {
-    setPage((prevPage) => prevPage + 1);
-    movieListData(page + 1);
-  };
-
-  const handlePreviousPage = () => {
-    setPage((prevPage) => prevPage - 1);
-    movieListData(page - 1);
-  };
+  useEffect(() => {
+    movieListData();
+    // eslint-disable-next-line
+  }, [page, type]);
 
   useEffect(() => {
-    movieListData(1, type);
     setPage(1);
     // eslint-disable-next-line
   }, [type]);
 
+  const label = type ? type.replace("_", " ") : "popular";
+
   return (
-    <>
-      {!loading ? (
-        <div className="my-10 mx-4 space-y-6">
-          <div className="flex justify-between items-center">
-            <span
-              style={{ textTransform: "capitalize" }}
-              className="text-2xl md:text-3xl font-semibold"
-            >
-              {type ? type : "popular"}
-            </span>
-            <div className="space-x-4 text-white">
-              <button
-                className={`shadow-sm shadow-black px-3 text-sm md:text-base py-1 rounded-lg ${
-                  page > 1 ? "bg-sky-600" : "bg-sky-900"
-                }`}
-                onClick={handlePreviousPage}
-                disabled={page <= 1}
-                style={{ cursor: page > 1 ? "pointer" : "not-allowed" }}
-              >
-                Previous
-              </button>
-              <button
-                className={`shadow-sm shadow-black px-3 text-sm md:text-base py-1 rounded-lg ${
-                  page <= totalPages ? "bg-sky-600" : "bg-sky-900"
-                }`}
-                onClick={handleNextPage}
-                disabled={page >= totalPages}
-                style={{
-                  cursor: page <= totalPages ? "pointer" : "not-allowed",
-                }}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-flow-row grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {movieList.map((data) => {
-              return (
-                <>
-                  <div>
-                    <div className="md:hover:scale-105 duration-500 ease-in-out">
-                      <Link
-                        to={`/movie/${data.id}`}
-                      >
-                        <img
-                          className="border-0 border-black shadow-sm shadow-black h-[30rem] mx-auto w-screen object-cover md:h-96 rounded-lg"
-                          src={`https://image.tmdb.org/t/p/original/${data.poster_path}`}
-                          alt=""
-                        />
-                      </Link>
-                    </div>
-                    <div className="my-3 flex flex-col">
-                      <Link
-                        to={`/movie/${data.id}-${data.title}`}
-                        className="hover:underline duration-200"
-                      >
-                        {data.title
-                          ? data.title.length > 30
-                            ? `${data.title.slice(0, 30)}...`
-                            : data.title
-                          : ""}
-                      </Link>
-                      <div className="flex justify-between">
-                        <span className="">{data.release_date}</span>
-                        <span>
-                          {data.vote_average
-                            ? `${Math.round(data.vote_average * 10) / 10}`
-                            : 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              );
-            })}
-          </div>
+    <div className="px-6 py-10" style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold capitalize" style={{ color: "var(--text)" }}>{label}</h2>
+          <div className="h-0.5 w-16 mt-1 rounded-full bg-blue-500" />
+        </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex justify-center items-center h-fit my-12">
-          <img src={loadingGif} alt="" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {movieList.map((data) => <MovieCard key={data.id} data={data} />)}
         </div>
       )}
-    </>
+    </div>
   );
 };
 
